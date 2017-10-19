@@ -5,12 +5,14 @@ import joptsimple.internal.Strings;
 import object_model.*;
 import object_model.Object;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class DataFusion {
 
     private int chunksCount = 10;
+    public static Writer output;
 
     public static void main(String[] args) throws Exception {
 
@@ -25,6 +27,8 @@ public class DataFusion {
         ArrayList<Object> objects = extractor.getData();
         int counter = 0;
 
+        output = new BufferedWriter(new FileWriter("searchQueriesPublisher.txt", true));
+
 
         Fusion fusion = new Fusion(objects.size(), chunksCount, factory.getComparator(), factory.getSearcher(), factory.getObjectMetric());
 
@@ -35,6 +39,8 @@ public class DataFusion {
                 System.out.println(counter);
             fusion.Fuse(object);
         }
+
+        output.close();
 
         HashMap<KeyQuality, Integer>[] results = getResults(fusion);
 
@@ -48,6 +54,8 @@ public class DataFusion {
         HashMap<KeyQuality, Integer>[] results = new HashMap[chunksCount];
 
         for (int i = 0; i < chunksCount; i++) {
+
+            results[i] = new HashMap<>();
 
             for (ObjectReport rep : fusion.Reports()[i]) {
 
@@ -74,16 +82,26 @@ public class DataFusion {
 
     private void showResults(HashMap<KeyQuality, Integer>[] results)
     {
-        for (int i = 0; i < chunksCount; i++) {
+        try {
+            PrintWriter writer = new PrintWriter("results.csv", "UTF-8");
 
-            System.out.println("Quality information for " + i + " chunk");
+            for (int i = 0; i < chunksCount; i++) {
 
-            for (KeyQuality result : results[i].keySet()) {
+                writer.println("Quality information for " + i + " chunk");
 
-                System.out.println(result + " " + results[i].get(result));
+                for (KeyQuality result : results[i].keySet()) {
+
+                    writer.println(result + " " + results[i].get(result));
+                }
+
+                writer.println(Strings.repeat('-', 20));
             }
 
-            System.out.println(Strings.repeat('-', 20));
+            writer.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
     }
 

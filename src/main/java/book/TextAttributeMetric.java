@@ -21,21 +21,24 @@ public abstract class TextAttributeMetric extends AttributeMetric {
         Book firstBook = (Book) firstObj;
         Book secondBook = (Book) secondObj;
 
-        if (getAttributeValue(firstBook).toLowerCase().contains(secondBook.title().toLowerCase())) {
+        if (getAttributeValue(firstBook).toLowerCase().contains(getAttributeValue(secondBook).toLowerCase())) {
             return new AttributeReport(getAttributeName(), AttributeQuality.ACCURATE);
         }
 
         Levenshtein levenshtein = new Levenshtein();
 
-        double distance = (levenshtein.distance(firstBook.title().toLowerCase(), secondBook.title().toLowerCase()));
+        double distance = (levenshtein.distance(getAttributeValue(firstBook).toLowerCase(), getAttributeValue(secondBook).toLowerCase()));
 
         if (distance > threshold) {
-            if (secondBook.title().toLowerCase().contains(firstBook.title().toLowerCase())) {
+            if (getAttributeValue(secondBook).toLowerCase().contains(getAttributeValue(firstBook).toLowerCase())) {
 
                 return new AttributeReport(getAttributeName(), AttributeQuality.INCOMPLETE);
             }
             else {
-                //todo: semantic analysis
+
+                if (!checkSemanticAccuracy(firstBook, secondBook)) {
+                    return new AttributeReport(getAttributeName(), AttributeQuality.SEMANTIC_INACCURATE);
+                }
 
                 return new AttributeReport(getAttributeName(), AttributeQuality.UNKNOWN);
             }
@@ -44,8 +47,8 @@ public abstract class TextAttributeMetric extends AttributeMetric {
 
             JLanguageTool language = new JLanguageTool(new AmericanEnglish());
             try {
-                List<RuleMatch> matchesFirst = language.check(firstBook.title());
-                List<RuleMatch> matchesSecond = language.check(secondBook.title());
+                List<RuleMatch> matchesFirst = language.check(getAttributeValue(firstBook));
+                List<RuleMatch> matchesSecond = language.check(getAttributeValue(secondBook));
 
                 if (matchesFirst.size() == 0) {
                     return new AttributeReport(getAttributeName(), AttributeQuality.ACCURATE);
@@ -64,4 +67,6 @@ public abstract class TextAttributeMetric extends AttributeMetric {
     protected abstract String getAttributeName();
 
     protected abstract String getAttributeValue(Book book);
+
+    protected abstract boolean checkSemanticAccuracy(Book firstBook, Book secondBook);
 }
