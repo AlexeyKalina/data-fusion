@@ -68,5 +68,26 @@ public abstract class TextAttributeMetric extends AttributeMetric {
 
     protected abstract String getAttributeValue(Book book);
 
-    protected abstract boolean checkSemanticAccuracy(Book firstBook, Book secondBook);
+    protected boolean checkSemanticAccuracy(Book firstBook, Book secondBook) {
+
+        String[] firstUrls =  YandexFileSearch.INSTANCE.getQueryResults(getAttributeValue(firstBook), getAttributeName());
+        String[] secondUrls =  YandexFileSearch.INSTANCE.getQueryResults(getAttributeValue(secondBook), getAttributeName());
+
+        if (firstUrls == null || secondUrls == null)
+            return false;
+
+        int countCommon = 0;
+        for(int i = 0; i < firstUrls.length; i++) {
+            for(int j = 0; j < secondUrls.length; j++) {
+                if(firstUrls[i].equals(secondUrls[j])) {
+                    countCommon++;
+                }
+            }
+        }
+
+        if (countCommon >= 5)
+            return true;
+
+        return false;
+    }
 }

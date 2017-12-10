@@ -14,6 +14,4 @@ public class PublisherAttributeMetric extends TextAttributeMetric {
         return book.publisher();
     }
 
-    @Override
-    protected boolean checkSemanticAccuracy(Book firstBook, Book secondBook) { return true; }
 }
